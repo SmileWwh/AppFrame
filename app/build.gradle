@@ -1,0 +1,151 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 25
+    buildToolsVersion "25.0.1"
+    defaultConfig {
+        //应用ID，即包名
+        applicationId "com.wwh.appframe"
+        //最低适配版本，低于此版本的手机无法安装
+        minSdkVersion 22
+        //目标版本
+        targetSdkVersion 25
+        //版本号，每打一次包版本号+1
+        versionCode 1
+        //版本名，例如1.0.1，通常用三位，表示主版本号.分版本号.补丁号（小版本号)
+        versionName "1.0"
+        //dex突破65535限制,当app方法数超过限制,会采用多dex打包
+        multiDexEnabled true
+        //默认打包渠道是友盟
+        manifestPlaceholders = [UMENG_CHANNEL_VALUE: "umeng"]
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+    //签名配置  注意：keystore.properties文件不要添加到版本控制中
+    File signFile = rootProject.file('keystore.properties')
+    if (signFile.exists()){
+        Properties properties = new Properties()
+        properties.load(new FileInputStream(signFile))
+        signingConfigs {
+            //测试版本
+            debug {
+            }
+            //正式版本
+            release {
+                storeFile file(properties['storeFilePath'])
+                storePassword properties['storePassword']
+                keyAlias properties['keyAlias']
+                keyPassword properties['keyPassword']
+            }
+        }
+    }
+    //打包排除以下文件，屏蔽因as自身bug，在没有重复引用jar时，提示jar重复引用的问题
+    packagingOptions {
+        exclude 'META-INF/DEPENDENCIES.txt'
+        exclude 'META-INF/LICENSE.txt'
+        exclude 'META-INF/NOTICE.txt'
+        exclude 'META-INF/NOTICE'
+        exclude 'META-INF/LICENSE'
+        exclude 'META-INF/DEPENDENCIES'
+        exclude 'META-INF/notice.txt'
+        exclude 'META-INF/license.txt'
+        exclude 'META-INF/dependencies.txt'
+        exclude 'META-INF/LGPL2.1'
+    }
+    dexOptions {
+        preDexLibraries true
+        javaMaxHeapSize "4g"
+        incremental true
+        dexInProcess = true
+    }
+    //Lint配置
+    lintOptions {
+        //禁止lint出错导致打包异常终止
+        disable('MissingTranslation', 'ExtraTranslation')
+        checkReleaseBuilds false
+        abortOnError false
+        ignoreWarnings true
+    }
+    //编译配置
+    compileOptions {
+        //指定Java版本
+        sourceCompatibility org.gradle.api.JavaVersion.VERSION_1_7
+        targetCompatibility org.gradle.api.JavaVersion.VERSION_1_7
+    }
+    sourceSets {
+        main {
+            jniLibs.srcDirs = ['src/main/jniLibs']
+        }
+    }
+    //打包配置
+    buildTypes {
+        //测试版本
+        debug {
+            //打开LOG
+            buildConfigField 'boolean', 'LOG_DEBUG', 'true'
+            buildConfigField 'String', 'BASE_URL', '"https://debug.com"'
+            //版本名字加上后缀，如：1.0-Debug
+            //versionNameSuffix "_debug"
+            minifyEnabled false
+            zipAlignEnabled false
+            shrinkResources false
+            //默认使用正式版签名，避免测试版本与正式版本签名不同引起的问题
+            signingConfig signingConfigs.release
+            applicationIdSuffix "_debug.apk"
+        }
+        //正式版本
+        release {
+            //自定义BuildConfig字段
+            //关闭LOG
+            buildConfigField 'boolean', 'LOG_DEBUG', 'false'
+            buildConfigField 'String', 'BASE_URL', '"https://release.com"'
+            //是否开启混淆
+            minifyEnabled true
+            //是否开启zip优化
+            zipAlignEnabled true
+            //删除无用资源
+            shrinkResources true
+            //设置签名使用的配置文件
+            signingConfig signingConfigs.release
+            //混淆使用的配置文件
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            //生成的APK文件后缀
+            applicationIdSuffix "_release.apk"
+        }
+    }
+    //应用编译完成，自定义apk输出位置及文件名
+    applicationVariants.all { variant ->
+        variant.outputs.each { output ->
+            def opf = output.outputFile
+            if (opf != null && opf.name.endsWith('.apk')) {
+                def fileName = "AppFrame_v${defaultConfig.versionName}_${variant.productFlavors[0].name}.apk"
+                //开始输出,自定义输出路径
+                output.outputFile = new File(opf.parent, fileName)
+            }
+        }
+    }
+
+    //建议Build出一个包，通过多渠道打包工具进行打包、签名
+    //多渠道打包
+    productFlavors {
+        //360手机助手
+        qihu360 {}
+        //应用汇
+        yingyonghui {}
+        //豌豆荚
+        wandoujia {}
+        //百度手机助手
+        baidu {}
+    }
+    //友盟多渠道打包
+    productFlavors.all {
+        flavor -> flavor.manifestPlaceholders = [UMENG_CHANNEL_VALUE: name]
+    }
+}
+
+dependencies {
+    compile fileTree(include: ['*.jar'], dir: 'libs')
+    androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
+        exclude group: 'com.android.support', module: 'support-annotations'
+    })
+    testCompile 'junit:junit:4.12'
+}
