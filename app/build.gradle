@@ -19,6 +19,11 @@ android {
         //默认打包渠道是友盟
         manifestPlaceholders = [UMENG_CHANNEL_VALUE: "umeng"]
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+
+        //启用插孔编译器(支持Java1.8)
+        jackOptions {
+            enabled true
+        }
     }
     //签名配置  注意：keystore.properties文件不要添加到版本控制中
     File signFile = rootProject.file('keystore.properties')
@@ -68,8 +73,8 @@ android {
     //编译配置
     compileOptions {
         //指定Java版本
-        sourceCompatibility org.gradle.api.JavaVersion.VERSION_1_7
-        targetCompatibility org.gradle.api.JavaVersion.VERSION_1_7
+        sourceCompatibility org.gradle.api.JavaVersion.VERSION_1_8
+        targetCompatibility org.gradle.api.JavaVersion.VERSION_1_8
     }
     sourceSets {
         main {
@@ -148,4 +153,21 @@ dependencies {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
     testCompile 'junit:junit:4.12'
+    compile 'com.android.support:support-v4:25.0.1'
+    compile 'com.android.support:appcompat-v7:25.0.1'
+    compile 'com.squareup:otto:1.3.8'
+    compile 'com.squareup.picasso:picasso:2.5.2'
+    compile 'com.google.code.gson:gson:2.6.2'
+    compile 'io.reactivex:rxandroid:1.2.1'
+    compile 'io.reactivex:rxjava:x.y.z'
+    compile 'com.squareup.okhttp3:okhttp:3.4.2'
+    compile 'com.squareup.okhttp3:logging-interceptor:3.4.2'
+    compile 'com.squareup.retrofit2:converter-gson:2.1.0'
+    compile 'com.squareup.retrofit2:adapter-rxjava:2.1.0'
+    compile('com.squareup.retrofit2:retrofit:2.1.0') {
+        exclude module: 'okhttp'
+    }
+    compile 'com.jakewharton:butterknife:8.4.0'
+    annotationProcessor 'com.jakewharton:butterknife-compiler:8.4.0'
+    compile 'com.android.support:design:25.0.1'
 }

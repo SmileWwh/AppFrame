@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">AppFrame</string>
+
+    <string name="snap_load_fail">加载数据失败！</string>
+    <string name="search_content_null">搜索内容不能为空！</string>
+    <string name="search_result_null">没有搜到结果！</string>
 </resources>
